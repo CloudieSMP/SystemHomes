@@ -1,7 +1,7 @@
 name: SystemHomes
 version: ${version}
 main: cloud.cloudie.cloudsystem.SystemHomes
-api-version: '1.21.4'
+api-version: '1.21.8'
 authors: [ Sebiann, Beauver ]
 website: https://cloudiesmp.github.io/
 prefix: SystemHomes

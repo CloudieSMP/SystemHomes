@@ -1,11 +1,11 @@
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 group = "cloud.cloudie"
-version = "0.4.3"
+version = "0.4.4"
 
 repositories {
     mavenCentral()
@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
 }
 
@@ -27,7 +27,7 @@ java {
 
 tasks {
     runServer {
-        minecraftVersion("1.21.4")
+        minecraftVersion("1.21.8")
     }
 
     processResources {
