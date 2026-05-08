@@ -1,0 +1,17 @@
+name: SystemHomes
+description: SystemHomes plugin
+api-version: '26.1.2'
+authors: [ Sebiann, Beauver ]
+website: https://oof.moe/
+
+version: '${version}'
+main: SystemHomes
+load: STARTUP
+
+permissions:
+  systemhomes.cmd.home:
+    description: Allows the player to use the /home command.
+    default: true
+  systemhomes.cmd.tpa:
+    description: Allows the player to use the /tpa command.
+    default: true

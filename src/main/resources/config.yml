@@ -1,0 +1,8 @@
+tpa:
+  # Time in seconds before a tpa request expires.
+  request-expire-time: 60
+  # Time in seconds before the player gets tped.
+  tpa-delay: 2
+
+home:
+  max-homes: 3
