@@ -1,5 +1,5 @@
 # Seb's SystemHomes Plugin
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/CloudieSMP/SystemHomes/Validate-Build.yml)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/CloudieSMP/SystemHomes/build.yml)
 
 A customizable plugin for Minecraft Paper servers. This plugin allows players to sethomes, warps, playerwarps and tpa.
 
@@ -7,9 +7,13 @@ A customizable plugin for Minecraft Paper servers. This plugin allows players to
 
 - Manage homes with `/sethome`, `/home`, and `/homes`.
 - Teleport to other players with `/tpa`, `/tpaccept`, and `/tpdeny`.
-- Manage warps with `/setwarp`, `/warp`, `/delwarp`, and `/warps`.
+- Manage global warps with `/setwarp`, `/warp`, `/delwarp`, `/warps`, and `/spawn`.
 - Manage player warps with `/setpwarp`, `/pwarp`, `/delpwarp`, and `/pwarps`.
 - Do `/spawn` to `/warp spawn`
+- Automatically import legacy data from the old `SystemHomes` on startup.
+- Check GitHub releases for updates on startup.
+- Store all global warps in one `warps.yml` file.
+- Store player warps per player UUID in `playerwarps/<uuid>.yml`.
 
 ## Commands
 
@@ -51,17 +55,31 @@ A customizable plugin for Minecraft Paper servers. This plugin allows players to
 The plugin's settings can be customized in the `config.yml` file. Below is an example configuration:
 
 ```yaml
+language: en
+
 home:
+  enable: true
   teleport_delay: 2
+  max_homes: 3
+
+tpa:
+  enable: true
+  request_expire_time: 30
+  teleport_delay: 2
+
 warp:
+  enable: true
   teleport_delay: 2
+
 pwarp:
+  enable: true
   teleport_delay: 2
   max_warps: 3
-tpa:
-  teleport_delay: 2
-  request_timeout: 30
 ```
+
+## Language Files
+
+Language files live in `plugins/SystemHomes/lang/`. The bundled `en.yml` is used as the base, and when the plugin starts it will only append any new keys that were added in a newer version.
 
 ## Permissions
 Do these even work atm?
@@ -78,8 +96,18 @@ Do these even work atm?
 | `systemhomes.player.*`       | Grants access to all player perms.                    |
 | `systemhomes.player.tpa`     | Grants access to use tpa and tpahere.                 |
 | `systemhomes.player.home`    | Grants access to use and set homes.                   |
-| `systemhomes.player.warp`    | Grants access to use warps.                           |
-| `systemhomes.player.pwarp`   | Grants access to use, set and delete own playerwarps. |
+| `systemhomes.cmd.warp`       | Grants access to use warps.                           |
+| `systemhomes.cmd.pwarp`      | Grants access to use player warps.                    |
+
+## Legacy Import
+
+If a `SystemHomes` folder exists next to the new plugin data folder, the plugin will import:
+
+- homes from `homes.yml`
+- warps from `warps.yml`
+- player warps from `playerwarps.yml`
+
+Imported data is written into the new storage layout automatically.
 
 ## Installation
 

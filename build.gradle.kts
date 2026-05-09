@@ -1,21 +1,5 @@
-import java.io.BufferedReader
-
-val patch = "INDEV"
-
-val commitHash = Runtime
-    .getRuntime()
-    .exec(arrayOf("git", "rev-parse", "--short", "HEAD"))
-    .let { process ->
-        process.waitFor()
-        val output = process.inputStream.use {
-            it.bufferedReader().use(BufferedReader::readText)
-        }
-        process.destroy()
-        output.trim()
-    }
-
 group = "moe.oof"
-version = "$patch-$commitHash"
+version = "0.5.0"
 
 plugins {
     kotlin("jvm") version libs.versions.kotlin.get()

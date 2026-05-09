@@ -15,3 +15,15 @@ permissions:
   systemhomes.cmd.tpa:
     description: Allows the player to use the /tpa command.
     default: true
+  systemhomes.cmd.warp:
+    description: Allows the player to use the warp commands.
+    default: true
+  systemhomes.admin.warp:
+    description: Allows the player to manage global warps.
+    default: op
+  systemhomes.cmd.pwarp:
+    description: Allows the player to use the player warp commands.
+    default: true
+  systemhomes.admin.pwarp:
+    description: Allows the player to manage any player warp.
+    default: op

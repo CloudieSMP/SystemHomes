@@ -127,7 +127,7 @@ object HomeStorage {
 
     fun flushAllSync() {
         cache.forEach { (playerId, loadedHomes) ->
-            flushSync(playerId, loadedHomes)
+            flush(playerId, loadedHomes)
         }
     }
 
@@ -171,7 +171,7 @@ object HomeStorage {
         Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, Runnable {
             queuedSaves.remove(playerId)
             val loadedHomes = cache[playerId] ?: return@Runnable
-            flushAsync(playerId, loadedHomes)
+            flush(playerId, loadedHomes)
         }, 20L)
     }
 
@@ -200,24 +200,7 @@ object HomeStorage {
         return PlayerHomesCache(homes = homes)
     }
 
-    private fun flushAsync(playerId: UUID, loadedHomes: PlayerHomesCache) {
-        val snapshot = synchronized(loadedHomes) {
-            if (!loadedHomes.dirty) {
-                null
-            } else {
-                loadedHomes.dirty = false
-                loadedHomes.homes.toMap()
-            }
-        } ?: return
-
-        if (!saveSnapshot(playerId, snapshot)) {
-            synchronized(loadedHomes) {
-                loadedHomes.dirty = true
-            }
-        }
-    }
-
-    private fun flushSync(playerId: UUID, loadedHomes: PlayerHomesCache) {
+    private fun flush(playerId: UUID, loadedHomes: PlayerHomesCache) {
         val snapshot = synchronized(loadedHomes) {
             if (!loadedHomes.dirty) {
                 null

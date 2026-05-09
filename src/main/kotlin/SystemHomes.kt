@@ -1,6 +1,15 @@
+import command.PlayerWarp
+import command.Home
+import command.Warp
+import command.Tpa
 import event.PlayerJoin
 import io.papermc.paper.command.brigadier.CommandSourceStack
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.plugin.java.JavaPlugin
+import util.HomeStorage
+import util.Lang
+import util.LegacyMigration
+import util.UpdateChecker
 import org.incendo.cloud.annotations.AnnotationParser
 import org.incendo.cloud.execution.ExecutionCoordinator
 import org.incendo.cloud.paper.PaperCommandManager
@@ -18,12 +27,15 @@ class SystemHomes : JavaPlugin() {
     override fun onEnable() {
         this.logger.info("Starting SystemHomes!")
         reloadConfig()
+        LegacyMigration.importLegacyData()
         registerCommands()
         server.pluginManager.registerEvents(PlayerJoin(), this)
+        UpdateChecker(this).checkForUpdates()
     }
 
     override fun onDisable() {
-        this.logger.info("Stopping SystemHomes!")
+        this.logger.info(Lang.raw("startup.stopping"))
+        HomeStorage.flushAllSync()
     }
 
     private fun registerCommands() {
@@ -32,7 +44,30 @@ class SystemHomes : JavaPlugin() {
             .buildOnEnable(this)
 
         annotationParser = AnnotationParser(commandManager, CommandSourceStack::class.java)
-        annotationParser.parseContainers()
+
+        if (config.home.enable) {
+            annotationParser.parse(Home())
+        } else {
+            logger.info(Lang.raw("startup.home-disabled"))
+        }
+
+        if (config.tpa.enable) {
+            annotationParser.parse(Tpa())
+        } else {
+            logger.info(Lang.raw("startup.tpa-disabled"))
+        }
+
+        if (config.warp.enable) {
+            annotationParser.parse(Warp())
+        } else {
+            logger.info(Lang.raw("startup.warp-disabled"))
+        }
+
+        if (config.pwarp.enable) {
+            annotationParser.parse(PlayerWarp())
+        } else {
+            logger.info(Lang.raw("startup.pwarp-disabled"))
+        }
     }
 
     override fun reloadConfig() {
@@ -58,9 +93,11 @@ class SystemHomes : JavaPlugin() {
 
         val node = loader.load()
         config = node.get(Config::class)!!
-        logger.info("Loaded configuration.")
+        Lang.load(config.language)
+        logger.info(Lang.raw("startup.loaded-config"))
     }
 }
 
 val plugin: SystemHomes get() = JavaPlugin.getPlugin(SystemHomes::class.java)
 val logger get() = plugin.logger
+val mm: MiniMessage get() = MiniMessage.miniMessage()

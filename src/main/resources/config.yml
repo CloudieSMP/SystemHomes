@@ -1,8 +1,27 @@
-tpa:
-  # Time in seconds before a tpa request expires.
-  request-expire-time: 60
-  # Time in seconds before the player gets tped.
-  tpa-delay: 2
+# Language file to use from the lang/ folder (e.g. "en" loads lang/en.yml).
+language: en
 
+# All home settings.
 home:
+  enable: true
+  teleport-delay: 2
   max-homes: 3
+
+# All tpa settings.
+tpa:
+  enable: true
+  # Time in seconds before a tpa request expires.
+  request-expire-time: 30
+  # Time in seconds before the player gets tped.
+  teleport-delay: 2
+
+# All warp settings.
+warp:
+  enable: true
+  teleport-delay: 2
+
+# All player-warp settings.
+pwarp:
+  enable: true
+  teleport-delay: 2
+  max-warps: 3

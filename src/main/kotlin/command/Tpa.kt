@@ -1,7 +1,7 @@
 package command
 
+import util.Lang
 import io.papermc.paper.command.brigadier.CommandSourceStack
-import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.incendo.cloud.annotations.Argument
@@ -19,14 +19,16 @@ import java.util.UUID
 @Suppress("unused")
 @CommandContainer
 class Tpa {
-    private val mm = MiniMessage.miniMessage()
     private val tpaRequests = mutableListOf<TpaRequest>()
+
+    private val enable: Boolean
+        get() = plugin.config.tpa.enable
 
     private val requestExpireTime: Int
         get() = plugin.config.tpa.requestExpireTime
 
     private val tpaDelay: Int
-        get() = plugin.config.tpa.tpaDelay
+        get() = plugin.config.tpa.teleportDelay
 
     @Command("tpa <player>")
     @CommandDescription("Request to teleport to another player.")
@@ -53,7 +55,7 @@ class Tpa {
         val tpaRequest = resolveIncomingRequest(player, requesterName) ?: return
 
         val targetPlayer: Player = Bukkit.getPlayer(tpaRequest.requester) ?: run {
-            player.sendMessage(mm.deserialize("<yellow>Player is no longer online."))
+            player.sendMessage(Lang.component("tpa.player-offline"))
             tpaRequests.remove(tpaRequest)
             return
         }
@@ -61,33 +63,17 @@ class Tpa {
         tpaRequests.remove(tpaRequest)
 
         if (tpaRequest.type == TpaType.TPA_THERE) {
-            player.sendMessage(mm.deserialize(
-                "<yellow>TPA request from <white>${targetPlayer.name}</white> accepted.\nThey will be teleported in <white>$tpaDelay</white> seconds."
-            ))
-            targetPlayer.sendMessage(mm.deserialize(
-                "<yellow>TPA request to <white>${player.name}</white> accepted.\nYou will be teleported to them in <white>$tpaDelay</white> seconds."
-            ))
-
-            scheduleDelayedTeleport(
-                teleportingPlayerId = targetPlayer.uniqueId,
-                destinationPlayerId = player.uniqueId,
-                destinationName = player.name,
-                requesterName = targetPlayer.name
-            )
+            player.sendMessage(Lang.component("tpa.accepted-tpa-there-accepter",
+                "requester" to targetPlayer.name, "delay" to tpaDelay.toString()))
+            targetPlayer.sendMessage(Lang.component("tpa.accepted-tpa-there-requester",
+                "accepter" to player.name, "delay" to tpaDelay.toString()))
+            scheduleDelayedTeleport(targetPlayer.uniqueId, player.uniqueId, player.name, targetPlayer.name)
         } else {
-            player.sendMessage(mm.deserialize(
-                "<yellow>TPA request from <white>${targetPlayer.name}</white> accepted.\nYou will be teleported in <white>$tpaDelay</white> seconds."
-            ))
-            targetPlayer.sendMessage(mm.deserialize(
-                "<yellow>TPA request to <white>${player.name}</white> accepted.\nThey will be teleported to you in <white>$tpaDelay</white> seconds."
-            ))
-
-            scheduleDelayedTeleport(
-                teleportingPlayerId = player.uniqueId,
-                destinationPlayerId = targetPlayer.uniqueId,
-                destinationName = targetPlayer.name,
-                requesterName = player.name
-            )
+            player.sendMessage(Lang.component("tpa.accepted-tpa-here-accepter",
+                "requester" to targetPlayer.name, "delay" to tpaDelay.toString()))
+            targetPlayer.sendMessage(Lang.component("tpa.accepted-tpa-here-requester",
+                "accepter" to player.name, "delay" to tpaDelay.toString()))
+            scheduleDelayedTeleport(player.uniqueId, targetPlayer.uniqueId, targetPlayer.name, player.name)
         }
     }
 
@@ -103,45 +89,37 @@ class Tpa {
 
         val target = Bukkit.getPlayer(tpaRequest.requester)
         val targetOffline = Bukkit.getOfflinePlayer(tpaRequest.requester)
-
         tpaRequests.remove(tpaRequest)
 
-        player.sendMessage(mm.deserialize(
-            "<red>TPA request from <yellow>${targetOffline.name}</yellow> denied."
-        ))
-
-        target?.sendMessage(mm.deserialize(
-            "<red>TPA request to <yellow>${player.name}</yellow> denied."
-        ))
+        player.sendMessage(Lang.component("tpa.denied-accepter", "requester" to (targetOffline.name ?: tpaRequest.requesterName)))
+        target?.sendMessage(Lang.component("tpa.denied-requester", "accepter" to player.name))
     }
 
     @Command("tpacancel")
-    @CommandDescription("Request to teleport another player here.")
+    @CommandDescription("Cancel your outgoing TPA requests.")
     @Permission("systemhomes.cmd.tpa")
     fun tpacancel(css: CommandSourceStack) {
         val player = css.requirePlayer() ?: return
         for (request in tpaRequests) {
             if (request.requester == player.uniqueId) {
-                val target = Bukkit.getPlayer(request.target)
-                target?.sendMessage(mm.deserialize(
-                    "<yellow>TPA request from <white>${player.name}</white> has been cancelled."
-                ))
+                Bukkit.getPlayer(request.target)?.sendMessage(
+                    Lang.component("tpa.cancelled-target", "requester" to player.name)
+                )
             }
         }
-        val removal = tpaRequests.removeIf { it.requester == player.uniqueId }
-        if (removal) player.sendMessage(mm.deserialize("<yellow>All your outgoing TPA requests have been cancelled."))
-        else player.sendMessage(mm.deserialize("<yellow>You don't have any outgoing TPA requests to cancel."))
+        val removed = tpaRequests.removeIf { it.requester == player.uniqueId }
+        if (removed) player.sendMessage(Lang.component("tpa.cancelled-all"))
+        else player.sendMessage(Lang.component("tpa.no-outgoing"))
     }
 
     private fun createRequest(css: CommandSourceStack, targetPlayer: Player, type: TpaType) {
         val player = css.requirePlayer() ?: return
         if (player.uniqueId == targetPlayer.uniqueId) {
-            player.sendMessage(mm.deserialize("<red>You cannot send a TPA request to yourself."))
+            player.sendMessage(Lang.component("tpa.self-request"))
             return
         }
-
         if (hasOutgoingRequestTo(player.uniqueId, targetPlayer.uniqueId)) {
-            player.sendMessage(mm.deserialize("<red>You already have an outgoing TPA request to this person pending."))
+            player.sendMessage(Lang.component("tpa.already-pending"))
             return
         }
 
@@ -149,25 +127,12 @@ class Tpa {
         tpaRequests.add(tpaRequest)
         deleteTpaAfterDelay(player, targetPlayer, requestExpireTime, tpaRequest)
 
-        player.sendMessage(mm.deserialize(
-            "<yellow>Teleport request sent to <white>${targetPlayer.name}</white>.\nRequest will time out in <white>$requestExpireTime</white> seconds."
-        ))
-        when (type) {
-            TpaType.TPA_THERE -> targetPlayer.sendMessage(mm.deserialize(
-                "<yellow><b><white>${player.name}</white></b> is requesting to teleport <b>to you</b>:"
-            ))
-            TpaType.TPA_HERE -> targetPlayer.sendMessage(mm.deserialize(
-                "<yellow><b><white>${player.name}</white></b> is requesting you to teleport <b>to them</b>:"
-            ))
-        }
-        targetPlayer.sendMessage(mm.deserialize(
-            "<yellow>Click/Type <click:run_command:'/tpaccept ${player.name}'><hover:show_text:'Accepts the TPA request.'><b><green>/tpaccept ${player.name}</green></b></hover></click> to accept\n" +
-                    "Click/Type <click:run_command:'/tpdeny ${player.name}'><hover:show_text:'Denies the TPA request.'><b><red>/tpdeny ${player.name}</red></b></hover></click> to deny."
-        ))
-    }
+        player.sendMessage(Lang.component("tpa.request-sent",
+            "target" to targetPlayer.name, "timeout" to requestExpireTime.toString()))
 
-    private fun hasOutgoingRequest(requesterId: UUID): Boolean {
-        return tpaRequests.any { it.requester == requesterId }
+        val typeKey = if (type == TpaType.TPA_THERE) "tpa.request-tpa-there" else "tpa.request-tpa-here"
+        targetPlayer.sendMessage(Lang.component(typeKey, "requester" to player.name))
+        targetPlayer.sendMessage(Lang.component("tpa.request-actions", "requester" to player.name))
     }
 
     private fun hasOutgoingRequestTo(requesterId: UUID, targetId: UUID): Boolean {
@@ -180,27 +145,26 @@ class Tpa {
         }
     }
 
-    private fun resolveIncomingRequest(player: Player, requesterName: String?): TpaRequest? {
-        val resolvedRequesterName = requesterName
-            ?.takeIf { it.isNotBlank() }
-            ?: findMostRecentIncomingRequest(player.uniqueId)?.requesterName.orEmpty()
-
-        if (resolvedRequesterName.isBlank()) {
-            player.sendMessage(mm.deserialize("<yellow>You don't have any incoming TPA requests."))
-            return null
-        }
-
-        val tpaRequest = findIncomingRequest(player.uniqueId, resolvedRequesterName)
-        if (tpaRequest == null) {
-            player.sendMessage(mm.deserialize("<yellow>You don't have an incoming TPA request from <white>${resolvedRequesterName}</white>."))
-            return null
-        }
-
-        return tpaRequest
-    }
-
     private fun findMostRecentIncomingRequest(targetId: UUID): TpaRequest? {
         return tpaRequests.lastOrNull { it.target == targetId }
+    }
+
+    private fun resolveIncomingRequest(player: Player, requesterName: String?): TpaRequest? {
+        val resolvedName = requesterName?.takeIf { it.isNotBlank() }
+            ?: findMostRecentIncomingRequest(player.uniqueId)?.requesterName.orEmpty()
+
+        if (resolvedName.isBlank()) {
+            player.sendMessage(Lang.component("tpa.no-incoming"))
+            return null
+        }
+
+        val request = findIncomingRequest(player.uniqueId, resolvedName)
+        if (request == null) {
+            player.sendMessage(Lang.component("tpa.no-incoming-from", "requester" to resolvedName))
+            return null
+        }
+
+        return request
     }
 
     @Suggestions("incoming-tpa-requesters")
@@ -227,15 +191,14 @@ class Tpa {
             val destinationPlayer = Bukkit.getPlayer(destinationPlayerId)
 
             if (teleportingPlayer == null || destinationPlayer == null) {
-                teleportingPlayer?.sendMessage(mm.deserialize("<red>Teleport cancelled because the other player went offline.</red>"))
-                destinationPlayer?.sendMessage(mm.deserialize("<red>Teleport cancelled because the other player went offline.</red>"))
+                teleportingPlayer?.sendMessage(Lang.component("tpa.teleport-cancelled-offline"))
+                destinationPlayer?.sendMessage(Lang.component("tpa.teleport-cancelled-offline"))
                 return@Runnable
             }
 
-            val success = teleportingPlayer.teleport(destinationPlayer)
-            if (!success) {
-                teleportingPlayer.sendMessage(mm.deserialize("<red>Teleport to <white>$destinationName</white> failed.</red>"))
-                destinationPlayer.sendMessage(mm.deserialize("<red>Teleport for <white>$requesterName</white> failed.</red>"))
+            if (!teleportingPlayer.teleport(destinationPlayer)) {
+                teleportingPlayer.sendMessage(Lang.component("tpa.teleport-failed-to", "target" to destinationName))
+                destinationPlayer.sendMessage(Lang.component("tpa.teleport-failed-for", "requester" to requesterName))
             }
         }, tpaDelay * 20L)
     }
@@ -243,8 +206,10 @@ class Tpa {
     private fun deleteTpaAfterDelay(player: Player, target: Player, requestTimeout: Int, tpaRequest: TpaRequest) {
         Bukkit.getScheduler().runTaskLater(plugin, Runnable {
             if (tpaRequests.remove(tpaRequest)) {
-                Bukkit.getPlayer(player.uniqueId)?.sendMessage(mm.deserialize("<yellow>TPA request to <white>${target.name}</white> has timed out."))
-                Bukkit.getPlayer(target.uniqueId)?.sendMessage(mm.deserialize("<yellow>TPA request from <white>${player.name}</white> has timed out."))
+                Bukkit.getPlayer(player.uniqueId)?.sendMessage(
+                    Lang.component("tpa.timed-out-requester", "target" to target.name))
+                Bukkit.getPlayer(target.uniqueId)?.sendMessage(
+                    Lang.component("tpa.timed-out-target", "requester" to player.name))
             }
         }, requestTimeout * 20L)
     }

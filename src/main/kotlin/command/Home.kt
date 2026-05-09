@@ -1,12 +1,9 @@
 package command
 
 import util.HomeStorage
+import util.Lang
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.event.ClickEvent
-import net.kyori.adventure.text.event.HoverEvent
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.incendo.cloud.annotations.Argument
@@ -18,11 +15,11 @@ import org.incendo.cloud.annotations.processing.CommandContainer
 import org.incendo.cloud.annotations.suggestion.Suggestions
 import org.incendo.cloud.context.CommandContext
 import plugin
+import util.requirePlayer
 
 @Suppress("unused")
 @CommandContainer
 class Home {
-    private val mm = MiniMessage.miniMessage()
     private val maxHomes: Int
         get() = plugin.config.home.maxHomes
 
@@ -35,30 +32,18 @@ class Home {
             val onlinePlayer = Bukkit.getPlayer(player.uniqueId) ?: return@listHomeNamesAsync
 
             if (homes.isEmpty()) {
-                onlinePlayer.sendMessage(mm.deserialize("<gray>You have no homes yet. Use <white>/sethome <name></white> to create one."))
+                onlinePlayer.sendMessage(Lang.component("home.no-homes"))
                 return@listHomeNamesAsync
             }
 
-            val header = Component.text("Your homes ")
-                .color(NamedTextColor.WHITE)
-                .append(Component.text("(${homes.size}/$maxHomes)", NamedTextColor.DARK_GRAY))
-                .append(Component.text(": ", NamedTextColor.WHITE))
+            val header = Lang.component("home.list-header", "count" to homes.size.toString(), "max" to maxHomes.toString())
+            val separator = Lang.component("home.list-separator")
+            val entries = homes.map { name -> Lang.component("home.list-entry", "name" to name) }
 
-            val homeComponents = homes.mapIndexed { index, homeName ->
-                val component = Component.text(homeName, NamedTextColor.AQUA)
-                    .clickEvent(ClickEvent.runCommand("/home $homeName"))
-                    .hoverEvent(HoverEvent.showText(
-                        Component.text("Click to teleport", NamedTextColor.GREEN)
-                    ))
-
-                if (index < homes.size - 1) {
-                    component.append(Component.text(", ", NamedTextColor.DARK_GRAY))
-                } else {
-                    component
-                }
+            val message = entries.foldIndexed(header) { index, acc, entry ->
+                val withEntry = acc.append(entry)
+                if (index < entries.size - 1) withEntry.append(separator) else withEntry
             }
-
-            val message = homeComponents.fold(header) { acc, component -> acc.append(component) }
             onlinePlayer.sendMessage(message)
         }
     }
@@ -74,29 +59,28 @@ class Home {
         val playerId = player.uniqueId
         val homeLocation = player.location.clone()
         val sanitizedName = sanitizeName(name) ?: run {
-            player.sendMessage(mm.deserialize("<red>Home names must be 1-16 chars and use only letters, numbers, _ or -.</red>"))
+            player.sendMessage(Lang.component("home.invalid-name"))
             return
         }
 
         HomeStorage.snapshotHomesAsync(playerId) { homes ->
             val onlinePlayer = Bukkit.getPlayer(playerId) ?: return@snapshotHomesAsync
-            val homeCount = homes.size
             val existingHome = homes.containsKey(sanitizedName)
-            if (!existingHome && homeCount >= maxHomes) {
-                onlinePlayer.sendMessage(mm.deserialize("<red>You reached the home limit <dark_gray>($maxHomes)</dark_gray>. Delete one first with <white>/delhome <name></white>."))
+            if (!existingHome && homes.size >= maxHomes) {
+                onlinePlayer.sendMessage(Lang.component("home.limit-reached", "max" to maxHomes.toString()))
                 return@snapshotHomesAsync
             }
             if (existingHome && !forced) {
-                onlinePlayer.sendMessage(mm.deserialize("<yellow>Home <white>$sanitizedName</white> already exists.</yellow>\n<white><click:run_command:'/sethome $sanitizedName --force'><hover:show_text:'Confirm overwriting home.'><b>Click Here</b></hover></click></white><yellow> to overwrite home.</yellow>"))
+                onlinePlayer.sendMessage(Lang.component("home.already-exists", "name" to sanitizedName))
                 return@snapshotHomesAsync
             }
 
             HomeStorage.saveHomeAsync(playerId, sanitizedName, homeLocation) { outcome ->
                 val refreshedPlayer = Bukkit.getPlayer(playerId) ?: return@saveHomeAsync
                 when (outcome) {
-                    HomeStorage.SaveOutcome.CREATED -> refreshedPlayer.sendMessage(mm.deserialize("<green>Home <white>$sanitizedName</white> created."))
-                    HomeStorage.SaveOutcome.UPDATED -> refreshedPlayer.sendMessage(mm.deserialize("<yellow>Home <white>$sanitizedName</white> updated."))
-                    HomeStorage.SaveOutcome.FAILED -> refreshedPlayer.sendMessage(mm.deserialize("<red>Could not save home right now. Please try again.</red>"))
+                    HomeStorage.SaveOutcome.CREATED -> refreshedPlayer.sendMessage(Lang.component("home.created", "name" to sanitizedName))
+                    HomeStorage.SaveOutcome.UPDATED -> refreshedPlayer.sendMessage(Lang.component("home.updated", "name" to sanitizedName))
+                    HomeStorage.SaveOutcome.FAILED  -> refreshedPlayer.sendMessage(Lang.component("home.save-failed"))
                 }
             }
         }
@@ -109,22 +93,21 @@ class Home {
         val player = css.requirePlayer() ?: return
         val playerId = player.uniqueId
         val sanitizedName = sanitizeName(name) ?: run {
-            player.sendMessage(mm.deserialize("<red>Invalid home name.</red>"))
+            player.sendMessage(Lang.component("home.invalid-name-short"))
             return
         }
 
         HomeStorage.loadHomeAsync(playerId, sanitizedName) { home ->
             val onlinePlayer = Bukkit.getPlayer(playerId) ?: return@loadHomeAsync
             val targetHome = home ?: run {
-                onlinePlayer.sendMessage(mm.deserialize("<red>Home <white>$sanitizedName</white> does not exist.</red>"))
+                onlinePlayer.sendMessage(Lang.component("home.not-found", "name" to sanitizedName))
                 return@loadHomeAsync
             }
 
-            val success = onlinePlayer.teleport(targetHome)
-            if (success) {
-                onlinePlayer.sendMessage(mm.deserialize("<green>Teleported to <white>$sanitizedName</white>."))
+            if (onlinePlayer.teleport(targetHome)) {
+                onlinePlayer.sendMessage(Lang.component("home.teleported", "name" to sanitizedName))
             } else {
-                onlinePlayer.sendMessage(mm.deserialize("<red>Teleport failed. The location may be invalid.</red>"))
+                onlinePlayer.sendMessage(Lang.component("home.teleport-failed"))
             }
         }
     }
@@ -139,20 +122,20 @@ class Home {
         val player = css.requirePlayer() ?: return
         val playerId = player.uniqueId
         val sanitizedName = sanitizeName(name) ?: run {
-            player.sendMessage(mm.deserialize("<red>Invalid home name.</red>"))
+            player.sendMessage(Lang.component("home.invalid-name-short"))
             return
         }
         if (!forced) {
-            player.sendMessage(mm.deserialize("<yellow>Are you sure you want to delete <white>$sanitizedName</white>?\n<white><click:run_command:'/delhome $sanitizedName --force'><hover:show_text:'Confirm deleting home.'><b>Click Here</b></hover></click></white><yellow> to delete home.</yellow>"))
+            player.sendMessage(Lang.component("home.delete-confirm", "name" to sanitizedName))
             return
         }
 
         HomeStorage.deleteHomeAsync(playerId, sanitizedName) { deleted ->
             val onlinePlayer = Bukkit.getPlayer(playerId) ?: return@deleteHomeAsync
             if (deleted) {
-                onlinePlayer.sendMessage(mm.deserialize("<green>Deleted home <white>$sanitizedName</white>."))
+                onlinePlayer.sendMessage(Lang.component("home.deleted", "name" to sanitizedName))
             } else {
-                onlinePlayer.sendMessage(mm.deserialize("<red>Home <white>$sanitizedName</white> does not exist.</red>"))
+                onlinePlayer.sendMessage(Lang.component("home.not-found", "name" to sanitizedName))
             }
         }
     }
@@ -169,12 +152,5 @@ class Home {
         val player = context.sender().sender as? Player ?: return emptyList()
         return HomeStorage.listHomeNamesCached(player.uniqueId)
             .filter { it.startsWith(input, ignoreCase = true) }
-    }
-
-    fun CommandSourceStack.requirePlayer(): Player? {
-        return this.sender as? Player ?: run {
-            this.sender.sendMessage("<red>Only players can use this command.</red>")
-            null
-        }
     }
 }
