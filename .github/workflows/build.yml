@@ -38,7 +38,10 @@ jobs:
 
           name: ${{ inputs.version }}
           version: ${{ inputs.version }}
+          version-type: release
           changelog: ${{ inputs.changelog || 'Automated build' }}
 
           game-versions: |
             26.1.2
+          loaders: |
+            paper
