@@ -1,0 +1,44 @@
+name: build
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+      changelog:
+        description: 'Changelog/Release notes'
+        required: false
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew jar
+
+      - name: Publish to GitHub and Modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: kShy4nQx
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+          files: build/libs/!(*-dev).jar
+
+          name: ${{ inputs.version }}
+          version: ${{ inputs.version }}
+          changelog: ${{ inputs.changelog || 'Automated build' }}
+
+          game-versions: |
+            26.1.2
