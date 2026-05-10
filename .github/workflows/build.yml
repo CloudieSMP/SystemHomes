@@ -8,6 +8,9 @@ on:
       changelog:
         description: 'Changelog/Release notes'
         required: false
+permissions:
+  contents: write
+  packages: write
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
