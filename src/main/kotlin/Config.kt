@@ -27,6 +27,7 @@ data class TpaConfig(
 data class WarpConfig(
     val enable: Boolean = true,
     val teleportDelay: Int = 2,
+    val spawnDelay: Int = 2,
 )
 
 @ConfigSerializable

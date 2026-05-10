@@ -68,7 +68,7 @@ object Lang {
                 }
                 changed = mergeMissingKeys(target, sourceSection, fullPath) || changed
             } else if (!target.contains(fullPath)) {
-                target.set(fullPath, source.get(fullPath))
+                target.set(fullPath, source.get(key))
                 changed = true
             }
         }

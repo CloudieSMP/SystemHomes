@@ -19,6 +19,7 @@ tpa:
 warp:
   enable: true
   teleport-delay: 2
+  spawn-delay: 2
 
 # All player-warp settings.
 pwarp:

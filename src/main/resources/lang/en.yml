@@ -25,6 +25,7 @@ home:
   save-failed: "<red>Could not save home right now. Please try again.</red>"
   invalid-name-short: "<red>Invalid home name.</red>"
   not-found: "<red>Home <white>{name}</white> does not exist.</red>"
+  teleporting: "<green>Teleporting you to <white>{name}</white> in <white>{delay}</white> seconds.</green>"
   teleported: "<green>Teleported to <white>{name}</white>."
   teleport-failed: "<red>Teleport failed. The location may be invalid.</red>"
   delete-confirm: "<yellow>Are you sure you want to delete <white>{name}</white>?</yellow>\n<white><click:run_command:'/delhome {name} --force'><hover:show_text:'<yellow>Confirm deleting home.</yellow>'><b>Click Here</b></hover></click></white><yellow> to delete home.</yellow>"
@@ -57,7 +58,7 @@ tpa:
 
 warp:
   no-warps: "<gray>There are no warps available.</gray>"
-  list-header: "<gold>Server warps <dark_gray>({count})</dark_gray>:</gold>"
+  list-header: "<gold>Server warps <dark_gray>({count})</dark_gray>:</gold><newline>"
   list-entry: "<yellow>{name}</yellow> <dark_gray>-</dark_gray> <aqua>({world}; {x}, {y}, {z})</aqua>"
   list-hover: "<yellow>Teleport to <white>{name}</white>.</yellow>"
   needs-name: "<red>Please give a name to this warp.</red>"
@@ -99,3 +100,6 @@ migration:
   imported-warps: "Imported {count} warps from SystemHomes-old."
   imported-pwarps: "Imported {count} player warps from SystemHomes-old."
 
+reload:
+  success: "<green>Configuration reloaded successfully!</green>"
+  failed: "<red>Failed to reload configuration. {error}.</red>"

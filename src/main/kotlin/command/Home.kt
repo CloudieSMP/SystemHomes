@@ -23,6 +23,9 @@ class Home {
     private val maxHomes: Int
         get() = plugin.config.home.maxHomes
 
+    private val teleportDelay: Int
+        get() = plugin.config.home.teleportDelay
+
     @Command("homes")
     @CommandDescription("List your saved homes.")
     @Permission("systemhomes.cmd.home")
@@ -104,11 +107,17 @@ class Home {
                 return@loadHomeAsync
             }
 
-            if (onlinePlayer.teleport(targetHome)) {
-                onlinePlayer.sendMessage(Lang.component("home.teleported", "name" to sanitizedName))
-            } else {
-                onlinePlayer.sendMessage(Lang.component("home.teleport-failed"))
+            if (teleportDelay > 0) {
+                onlinePlayer.sendMessage(Lang.component("home.teleporting", "name" to sanitizedName, "delay" to teleportDelay.toString()))
             }
+            Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                val onlinePlayer = Bukkit.getPlayer(player.uniqueId) ?: return@Runnable
+                if (onlinePlayer.teleport(targetHome)) {
+                    onlinePlayer.sendMessage(Lang.component("home.teleported", "name" to sanitizedName))
+                } else {
+                    onlinePlayer.sendMessage(Lang.component("home.teleport-failed"))
+                }
+            }, teleportDelay * 20L)
         }
     }
 

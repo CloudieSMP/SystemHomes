@@ -1,5 +1,5 @@
 group = "moe.oof"
-version = "0.5.0"
+version = "0.5.1"
 
 plugins {
     kotlin("jvm") version libs.versions.kotlin.get()

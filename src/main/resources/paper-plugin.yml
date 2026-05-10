@@ -9,21 +9,67 @@ main: SystemHomes
 load: STARTUP
 
 permissions:
+  systemhomes.admin.*:
+    description: Grants every SystemHomes admin permission.
+    default: op
+    children:
+      systemhomes.admin.reload: true
+      systemhomes.admin.warp: true
+      systemhomes.admin.pwarp: true
+  systemhomes.player.*:
+    description: Grants every SystemHomes player permission alias.
+    default: true
+    children:
+      systemhomes.player.home: true
+      systemhomes.player.tpa: true
+      systemhomes.player.warp: true
+      systemhomes.player.pwarp: true
+  systemhomes.cmd.*:
+    description: Grants every SystemHomes command permission.
+    default: true
+    children:
+      systemhomes.cmd.home: true
+      systemhomes.cmd.tpa: true
+      systemhomes.cmd.warp: true
+      systemhomes.cmd.pwarp: true
   systemhomes.cmd.home:
     description: Allows the player to use the /home command.
     default: true
+  systemhomes.player.home:
+    description: Alias for the home command permission.
+    default: false
+    children:
+      systemhomes.cmd.home: true
   systemhomes.cmd.tpa:
     description: Allows the player to use the /tpa command.
     default: true
+  systemhomes.player.tpa:
+    description: Alias for the tpa command permission.
+    default: false
+    children:
+      systemhomes.cmd.tpa: true
   systemhomes.cmd.warp:
     description: Allows the player to use the warp commands.
     default: true
+  systemhomes.player.warp:
+    description: Alias for the warp command permission.
+    default: false
+    children:
+      systemhomes.cmd.warp: true
+  systemhomes.admin.reload:
+    description: Allows the player to reload SystemHomes.
+    default: op
   systemhomes.admin.warp:
     description: Allows the player to manage global warps.
     default: op
   systemhomes.cmd.pwarp:
     description: Allows the player to use the player warp commands.
     default: true
+  systemhomes.player.pwarp:
+    description: Alias for the player warp command permission.
+    default: false
+    children:
+      systemhomes.cmd.pwarp: true
   systemhomes.admin.pwarp:
     description: Allows the player to manage any player warp.
     default: op

@@ -25,6 +25,9 @@ class Warp {
     private val teleportDelay: Int
         get() = plugin.config.warp.teleportDelay
 
+    private val spawnDelay: Int
+        get() = plugin.config.warp.spawnDelay
+
     @Command("warp <name>")
     @CommandDescription("Teleport to a warp.")
     @Permission("systemhomes.cmd.warp")
@@ -140,7 +143,10 @@ class Warp {
             return
         }
 
-        player.sendMessage(Lang.component("warp.teleporting", "name" to sanitized, "delay" to teleportDelay.toString()))
+        val delay = if (spawnCommand) spawnDelay else teleportDelay
+        if (delay > 0) {
+            player.sendMessage(Lang.component("warp.teleporting", "name" to sanitized, "delay" to delay.toString()))
+        }
         Bukkit.getScheduler().runTaskLater(plugin, Runnable {
             val onlinePlayer = Bukkit.getPlayer(player.uniqueId) ?: return@Runnable
             if (onlinePlayer.teleport(location)) {
@@ -148,7 +154,7 @@ class Warp {
             } else {
                 onlinePlayer.sendMessage(Lang.component("warp.teleport-failed"))
             }
-        }, teleportDelay * 20L)
+        }, delay * 20L)
     }
 
     private fun sanitizeName(input: String): String? {
@@ -167,4 +173,3 @@ class Warp {
         }
     }
 }
-

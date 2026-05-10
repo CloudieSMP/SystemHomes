@@ -1,7 +1,4 @@
-import command.PlayerWarp
-import command.Home
-import command.Warp
-import command.Tpa
+import command.*
 import event.PlayerJoin
 import io.papermc.paper.command.brigadier.CommandSourceStack
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -17,6 +14,7 @@ import org.spongepowered.configurate.kotlin.extensions.get
 import org.spongepowered.configurate.kotlin.objectMapperFactory
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
 import java.io.File
+import kotlin.system.measureNanoTime
 
 class SystemHomes : JavaPlugin() {
     private lateinit var commandManager: PaperCommandManager<CommandSourceStack>
@@ -45,6 +43,7 @@ class SystemHomes : JavaPlugin() {
 
         annotationParser = AnnotationParser(commandManager, CommandSourceStack::class.java)
 
+        annotationParser.parse(Reload())
         if (config.home.enable) {
             annotationParser.parse(Home())
         } else {

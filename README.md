@@ -55,26 +55,34 @@ A customizable plugin for Minecraft Paper servers. This plugin allows players to
 The plugin's settings can be customized in the `config.yml` file. Below is an example configuration:
 
 ```yaml
+# Language file to use from the lang/ folder (e.g. "en" loads lang/en.yml).
 language: en
 
+# All home settings.
 home:
   enable: true
-  teleport_delay: 2
-  max_homes: 3
+  teleport-delay: 2
+  max-homes: 3
 
+# All tpa settings.
 tpa:
   enable: true
-  request_expire_time: 30
-  teleport_delay: 2
+  # Time in seconds before a tpa request expires.
+  request-expire-time: 30
+  # Time in seconds before the player gets tped.
+  teleport-delay: 2
 
+# All warp settings.
 warp:
   enable: true
-  teleport_delay: 2
+  teleport-delay: 2
+  spawn-delay: 0
 
+# All player-warp settings.
 pwarp:
   enable: true
-  teleport_delay: 2
-  max_warps: 3
+  teleport-delay: 2
+  max-warps: 3
 ```
 
 ## Language Files
@@ -82,7 +90,6 @@ pwarp:
 Language files live in `plugins/SystemHomes/lang/`. The bundled `en.yml` is used as the base, and when the plugin starts it will only append any new keys that were added in a newer version.
 
 ## Permissions
-Do these even work atm?
 
 | Admin Permission           | Description                                         |
 |----------------------------|-----------------------------------------------------|
@@ -96,8 +103,10 @@ Do these even work atm?
 | `systemhomes.player.*`       | Grants access to all player perms.                    |
 | `systemhomes.player.tpa`     | Grants access to use tpa and tpahere.                 |
 | `systemhomes.player.home`    | Grants access to use and set homes.                   |
-| `systemhomes.cmd.warp`       | Grants access to use warps.                           |
-| `systemhomes.cmd.pwarp`      | Grants access to use player warps.                    |
+| `systemhomes.player.warp`    | Grants access to use warps.                           |
+| `systemhomes.player.pwarp`   | Grants access to use player warps.                    |
+
+The command permissions used internally are `systemhomes.cmd.home`, `systemhomes.cmd.tpa`, `systemhomes.cmd.warp`, and `systemhomes.cmd.pwarp`. The `systemhomes.player.*` aliases above grant those command nodes automatically.
 
 ## Legacy Import
 
