@@ -14,7 +14,6 @@ import org.spongepowered.configurate.kotlin.extensions.get
 import org.spongepowered.configurate.kotlin.objectMapperFactory
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader
 import java.io.File
-import kotlin.system.measureNanoTime
 
 class SystemHomes : JavaPlugin() {
     private lateinit var commandManager: PaperCommandManager<CommandSourceStack>
