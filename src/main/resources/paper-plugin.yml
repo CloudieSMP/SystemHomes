@@ -3,6 +3,7 @@ description: SystemHomes plugin
 api-version: '26.1.2'
 authors: [ Sebiann, Beauver ]
 website: https://oof.moe/
+github-repo: "CloudieSMP/SystemHomes"
 
 version: '${version}'
 main: SystemHomes
