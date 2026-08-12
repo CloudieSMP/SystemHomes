@@ -48,14 +48,15 @@ tasks {
 
         relocate("org.incendo", "${shadowPkg}.org.incendo")
         relocate("org.spongepowered", "${shadowPkg}.org.spongepowered")
-        // relocate("fr.mrmicky", "${shadowPkg}.fr.mrmicky")
-        // relocate("com.google.gson", "${shadowPkg}.com.google.gson")
 
         mergeServiceFiles()
     }
 
     processResources {
-        val props = mapOf("version" to version)
+        val props = mapOf(
+            "pluginVersion" to version,
+            "apiVersion" to libs.versions.minecraft.get()
+        )
         inputs.properties(props)
         filteringCharset = "UTF-8"
         filesMatching("paper-plugin.yml") {

@@ -1,11 +1,11 @@
 name: SystemHomes
 description: SystemHomes plugin
-api-version: '26.1.2'
+api-version: '${apiVersion}'
 authors: [ Sebiann, Beauver ]
 website: https://oof.moe/
 github-repo: "CloudieSMP/SystemHomes"
 
-version: '${version}'
+version: '${pluginVersion}'
 main: SystemHomes
 load: STARTUP
 
